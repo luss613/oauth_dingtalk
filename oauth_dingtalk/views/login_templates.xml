@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="oauth_dingtalk.qr_login_signup" name="DingTalk QR">
+        <t t-call="web.login_layout">
+            <form class="oe_signup_form">
+                <div class="text-center oe_login_buttons pt-3">
+                    <div id="login_container">QR Zone</div>
+                </div>
+                <p id="url" style="display:none;">
+                    <t t-esc="url"/>
+                </p>
+                <p id="qrKey" style="display:none;">
+                    <t t-esc="qrKey"/>
+                </p>
+                <div class="text-center oe_login_buttons pt-3">
+                    <a t-attf-href="/web/login" class="btn btn-link btn-sm" role="button">使用账号登录</a>
+                </div>
+            </form>
+            <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+            <script src="https://g.alicdn.com/dingding/dinglogin/0.0.5/ddLogin.js"></script>
+            <script>
+            $(function() {
+                var url = document.querySelector("#url").innerHTML.trim();
+                var qrKey = document.querySelector("#qrKey").innerHTML.trim();
+                var goto_str = 'https://oapi.dingtalk.com/connect/oauth2/sns_authorize?appid='+qrKey+'&amp;response_type=code&amp;scope=snsapi_login&amp;state=STATE&amp;redirect_uri='+url;
+                var goto = encodeURIComponent(goto_str);
+                var obj = DDLogin({
+                     id:"login_container",
+                     goto: goto,
+                     style: "border:none;background-color:#FFFFFF;",
+                     width : "265",
+                     height: "300"
+                 });
+                var handleMessage = function (event) {
+                    var origin = event.origin;
+                    console.log("origin", event.origin);
+                    if( origin == "https://login.dingtalk.com" ) { //判断是否来自ddLogin扫码事件。
+                        var loginTmpCode = event.data;
+                        //获取到loginTmpCode后就可以在这里构造跳转链接进行跳转了
+                        //t_url = 'https://oapi.dingtalk.com/connect/oauth2/sns_authorize?appid='+qrKey+'&amp;response_type=code&amp;scope=snsapi_login&amp;state=STATE&amp;redirect_uri='+url+'&amp;loginTmpCode='+loginTmpCode
+                        window.location.href = 'redirect/?loginTmpCode='+loginTmpCode;
+                    }
+                };
+                if (typeof window.addEventListener != 'undefined') {
+                    window.addEventListener('message', handleMessage, false);
+                } else if (typeof window.attachEvent != 'undefined') {
+                    window.attachEvent('onmessage', handleMessage);
+                }
+            });
+            </script>
+        </t>
+    </template>
+</odoo>
